@@ -1,24 +1,53 @@
-import React, {Component} from 'react'
+import React, { Component } from "react"
 import { connect } from 'react-redux'
-
+import LeaderBoardListItem from "./LeaderBoardListItem"
+import Login from './Login'
 
 class LeaderBoard extends Component {
-    render() {
-        return(
-            <div>
-                LeaderBoard Page coming soon
-            </div>
-        )
+  
+  render() {
+    const { userScoreList, isAuthenticated } = this.props;
+    
+    //login control
+    if (!isAuthenticated) {
+      return (
+        <div className="container">
+        <Login />
+        </div>
+      );
     }
+
+    const LeaderBoardList = userScoreList.map(score => {
+      return <LeaderBoardListItem key={score.id} score={score} />;
+    });
+
+    return (
+      <div>
+        <ul>{LeaderBoardList}</ul>
+      </div>
+    );
+  }
 }
 
-//function mapStateToProps({tweets}) {
-  //  return {
-    //    tweetIds: Object.keys(tweets)
-      //  .sort((a,b) => tweets[b].timestamp - tweets[a].timestamp)
+function mapStateToProps({ users, authedUser }) {
+  let userScoreList = []
+  const userIds = Object.keys(users)
+  
+  userIds.map((id) => (
+    userScoreList.push({
+      id: users[id].id,
+      total: users[id].questions.length + (Object.keys(users[id].answers).length),
+      answerCount: (Object.keys(users[id].answers).length),
+      questionCount: users[id].questions.length 
+    })
+  ))
 
-  //  }
-//}
+  userScoreList.sort((b, a) => (a.total) - (b.total))
 
-//export default connect(mapStateToProps)(Dashboard)
-export default LeaderBoard
+  return {
+    userScoreList,
+    isAuthenticated: authedUser !== null
+  }
+}
+
+export default connect(mapStateToProps)(LeaderBoard);

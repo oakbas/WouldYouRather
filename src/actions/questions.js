@@ -1,4 +1,4 @@
-import { saveQuestion, saveQuestionAnswer } from '../utils/api'
+import { saveQuestionAnswer, saveQuestion } from '../utils/api'
 import { showLoading, hideLoading } from 'react-redux-loading'
 
 export const RECEIVE_QUESTIONS = 'RECEIVE_QUESTIONS'
@@ -12,51 +12,47 @@ export function receiveQuestions (questions) {
   }
 }
 
-function addQuestion (question) {
-  return {
-    type: ADD_QUESTION,
-    question,
-  }
-}
-
-function addAnswer (answer) {
+function addAnswer ({ authedUser, qid, answer }) {
   return {
     type: ADD_ANSWER,
-    answer,
+    authedUser,
+    qid,
+    answer
   }
 }
 
-export function handleAddQuestion (optionOneText, optionTwoText) {
+function addQuestion ( question ) {
+  return {
+    type: ADD_QUESTION,
+    question
+  }
+}
+
+export function handleAddAnswer (info) {
+  return (dispatch) => {
+    dispatch(addAnswer(info))
+
+    return saveQuestionAnswer(info)
+      .catch((e) => {
+        alert('Error while saving question answer')
+      })
+  }
+}
+
+export function handleAddQuestion (question) {
   return (dispatch, getState) => {
-    const { author } = getState()
+    const { authedUser } = getState()
     dispatch(showLoading())
 
     return saveQuestion({
-      optionOneText,
-      optionTwoText,
-      author,
+      optionOneText: question.optionOne,
+      optionTwoText: question.optionTwo,
+      author: authedUser
     })
-      .then((question) => dispatch(addQuestion(question)))
-      .then(() => dispatch(hideLoading()))
-      .catch((e) => {
-        console.log('Add Answer action failed.')
-      })
-  }
-}
-
-export function handleAddAnswer (qId, answer, author) {
-  return (dispatch) => {
-    dispatch(showLoading())
-
-    return saveQuestionAnswer({
-      author,
-      qId,
-      answer,
+    .then((question) => dispatch(addQuestion(question)))
+    .then(() => dispatch(hideLoading()))
+    .catch((e) => {
+      alert('Error while saving a new question')
     })
-      .then((answer) => dispatch(addAnswer(answer)))
-      .then(() => dispatch(hideLoading()))
-      .catch((e) => {
-        console.log('Add Answer action failed.')
-      })
   }
 }
